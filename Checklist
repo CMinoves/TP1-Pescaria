@@ -1,0 +1,13 @@
+              CheckList jogo idiota
+
+(x) - Mover quadrado sem imagem para os lados;
+(x) - Redimensionar a tela de forma que a resolução original ñ se perca;
+() - Mover quadrado sem imagem para os lados utilizando função de tempo;
+() - Inserir figuras geométricas que simulem a interface gráfica do jogo;
+() - Esquematizar mapas, dificuldades, velocidades, texturas, trilha sonora, nome do jogo;
+() - Inserir geometricamente (sem textura) esses conceitos no jogo;
+() - Criação e implementação de Menu;
+() - Rolagem de Tela;
+() - Inserir figuras geométricas que simulem os powerups do jogo;
+() - Inserir Trilha Sonora;
+() - Inserir Interface Gráfica no jogo;
