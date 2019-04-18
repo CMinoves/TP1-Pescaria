@@ -1,4 +1,4 @@
-  #include <GL/glew.h>
+#include <GL/glew.h>
 #include <GL/freeglut.h>
 #include <stdio.h>
 #include<time.h>
@@ -16,6 +16,9 @@ int X = 45;
 #define VELPEIXES 5
 int keyboard[256];
 float aspectratio = 0.7692;
+int pause;
+int inicio;
+int etapa;//0 é descendo, 1 é parada no fundo, 2 é subindo e 3 é parada no topo
 typedef struct {
   double posx;
   double posy;
@@ -74,15 +77,25 @@ void desenhaQuadrado(void){
         glTranslatef(coisas[x].posx,coisas[x].posy-10,0);
       for(int x = 0;x<numpeixes;x++){
         glBegin(GL_TRIANGLE_FAN);
-        //glColor3f(1,0,0);
-        glColor3f(1,0,0);//
-        glVertex3f(-(peixeanzol[x].tamx), (peixeanzol[x].tamy)/2, 0);
+
+      //  p3------p2
+      //  |       |
+      //  |       |
+      //  p4------p1
+
+      //  p4------p2
+      //  |       |
+      //  |       |
+      //  p1------p1
+
         glColor3f(0,0,0);
-        glVertex3f(-(peixeanzol[x].tamx), -(peixeanzol[x].tamy)/2, 0);//    p3------p2
-        glColor3f(1,1,1);//                                                 |       |
-        glVertex3f(0, -(peixeanzol[x].tamy)/2, 0);//                        |       |
-        glColor3f(1,1,1);//                                                p4------p1
-        glVertex3f(0, (peixeanzol[x].tamy)/2, 0);//
+        glVertex3f(-(peixeanzol[x].tamy)/2, -(peixeanzol[x].tamx), 0);//p4
+        glColor3f(0,0,0);
+        glVertex3f(+(peixeanzol[x].tamy)/2, -(peixeanzol[x].tamx), 0);//p1
+        glColor3f(1,1,1);
+        glVertex3f((peixeanzol[x].tamy)/2, 0, 0);//p2
+        glColor3f(1,1,1);
+        glVertex3f(-(peixeanzol[x].tamy)/2, 0, 0);//p3
         glEnd();
       }
     glPopMatrix();
@@ -117,7 +130,7 @@ void DetectaColisoes(){
       }
       }
   }
-
+}
 void inicializaPedras(){
   for(int p = 0; p<NUMEROPEDRONA; p++){
       pedra[p].posy = -H/2 -(rand()%((int)H))-pedra[p].tamy-yfundo;
@@ -176,10 +189,10 @@ void inicializaPeixe(){
 
   for(int p = 0;p<NUMEROTILAPA;p++){
     peixe[p].posx = -W/2 + (rand()%((int)W));
-    peixe[p].posy = -H/2 +(rand()%((int)H))-peixe[p].tamy-yfundo;
+    peixe[p].posy = -H/2 +(rand()%((int)H))-peixe[p].tamy-yfundo-H;
     peixe[p].tamx = PEIXE_W;
     peixe[p].tamy = PEIXE_H;
-    peixe[p].dir = 1;
+    peixe[p].dir = rand()%2;
     //direita = 1 e esquerda = 0
    }
 }
@@ -205,6 +218,9 @@ void inicializa(void)
     coisas[0] = fundo;
     inicializaPedras();
     inicializaPeixe();
+    pause = 0;
+    inicio = 1;
+    etapa = 0;
 }
 
 // Callback de redimensionamento
@@ -242,6 +258,22 @@ void teclado(unsigned char key, int x, int y)
         keyboard['d'] = 1;
     break;
 
+    case 'p':
+      case 'P':
+        if(!inicio){
+          if(pause){
+            pause = 0;
+          }else{
+            pause = 1;
+          }
+        }
+      break;
+    case 13:
+      if(inicio){
+        inicio = 0;
+        pause = 1;
+      }
+    break;
     default:
 
     break;
@@ -262,19 +294,26 @@ void upteclado(unsigned char key, int x, int y)
   }
 }
 void PosColisao(int caso, int ord){
-  switch (caso){
-    case 1: //colisão com pedras
-     pedra[ord].posy = -H/2 -(rand()%((int)H))-pedra[ord].tamy-yfundo;
-     pedra[ord].posx = -W/2 + (rand()%((int)W));
-    break;
-    case 2: //colisão com power ups de vida
+  switch (etapa){
+    case 0:
+      switch (caso){
+        case 1: //colisão com pedras
+          pedra[ord].posy = -H/2 -(rand()%((int)H))-pedra[ord].tamy-yfundo;
+          pedra[ord].posx = -W/2 + (rand()%((int)W));
+        break;
+        case 2: //colisão com power ups de vida
 
+        break;
+        case 3: //colisao com peixe
+          peixeanzol[numpeixes] = peixe[ord];
+          numpeixes ++;
+          peixe[ord].posy = -H/2 -(rand()%((int)H))-peixe[ord].tamy-yfundo;
+          peixe[ord].posx = -W/2 + (rand()%((int)W));
+        break;
+      }
     break;
-    case 3: //colisao com peixe
-      peixeanzol[numpeixes] = peixe[ord];
-      numpeixes ++;
-      peixe[ord].posy = -H/2 -(rand()%((int)H))-peixe[ord].tamy-yfundo;
-      peixe[ord].posx = -W/2 + (rand()%((int)W));
+    case 1:
+
     break;
   }
 }
@@ -303,48 +342,79 @@ void atualizaobjetos(int i, int tipo){
 
 }
 void atualiza(){
-  //movimento do anzol
+  if(!pause){
+    if(inicio){
+      //escrever o que está no printf na tela
+      printf("Pressione enter para iniciar!\n");
+    }
+    printf("%i\n",inicio );
+  }else{
+      //movimento do anzol
   atualizaobjetos(1,0);
 
   //desenha o anzol
 //  printf("%f\n",coisas[1].posx);
- yfundo +=0.4;
+    switch (etapa){
+      case 0:
+        //descendo para o fundo
+        yfundo +=0.4;
+        for(int p = 0; p<NUMEROPEDRONA; p++){
+          if(pedra[p].posy>(H/2+(pedra[p].tamy))){
+            atualizaobjetos(p,1);
+          }
+          pedra[p].posy+=VELPEDRAS;
+        }
+        //atualização dos peixes
+        for(int p = 0; p<NUMEROTILAPA; p++){
+          if(peixe[p].posy>(H/2+(peixe[p].tamy))){
+            atualizaobjetos(p,2);
+          }
+          peixe[p].posy+=VELPEDRAS;
+
+        }
+      break;
+      case 1:
+        //parado no fundo e anzol descendo
+      break;
+      case 2:
+        yfundo -= 0.4;
+        //subindo ao topo
+      break;
+      case 3:
+        //parado e anzol subindo
+      break;
+      default:
+
+      break;
+
+
   //atualiza pedras
-  for(int p = 0; p<NUMEROPEDRONA; p++){
-    if(pedra[p].posy>(H/2+(pedra[p].tamy))){
-      atualizaobjetos(p,1);
+
+  //faz o peixe ir e voltar no eixo x
     }
-    pedra[p].posy+=VELPEDRAS;
-  }
-  //atualização dos peixes
-  for(int p = 0; p<NUMEROTILAPA; p++){
-    if(peixe[p].posy>(H/2+(peixe[p].tamy))){
-      atualizaobjetos(p,2);
-    }
-    if(peixe[p].dir){
-      if(peixe[p].posx+peixe[p].tamx/2 >=W/2){
-        peixe[p].dir = 0;
-        peixe[p].posx = W/2-PEIXE_W/2;
+    for(int p = 0; p<NUMEROTILAPA; p++){
+      if(peixe[p].dir){
+        if(peixe[p].posx+peixe[p].tamx/2 >=W/2){
+          peixe[p].dir = 0;
+          peixe[p].posx = W/2-PEIXE_W/2;
+        }else{
+          peixe[p].posx +=VELPEIXES;
+        }
       }else{
-        peixe[p].posx +=VELPEIXES;
-      }
-    }else{
-      if(peixe[p].posx-peixe[p].tamx/2 <=-W/2){
-        peixe[p].dir = 1;
-        peixe[p].posx = -W/2+PEIXE_W/2;
-      }else{
-        peixe[p].posx -=VELPEIXES;
+        if(peixe[p].posx-peixe[p].tamx/2 <=-W/2){
+          peixe[p].dir = 1;
+          peixe[p].posx = -W/2+PEIXE_W/2;
+        }else{
+          peixe[p].posx -=VELPEIXES;
+        }
       }
     }
-    peixe[p].posy+=VELPEDRAS;
-  }
   //  desenhaCena();
   //  glutSwapBuffers();
-    DetectaColisoes();
-    glutPostRedisplay();
-    glutTimerFunc(25, atualiza, 0);
-
-
+    }
+  DetectaColisoes();
+  glutPostRedisplay();
+  glutTimerFunc(25, atualiza, 0);
 }
 // Rotina principal
 int main(int argc, char **argv)
