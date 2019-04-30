@@ -1,0 +1,7 @@
+Tamanho dos sprites (largura X altura)
+
+Botoes: 260x100
+Fundo: 500x650
+Title: 500x105
+Game Over: 480x120
+Pressione enter para iniciar: 480x120
